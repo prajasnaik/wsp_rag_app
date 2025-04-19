@@ -1,35 +1,54 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import './App.css';
+import ChatInput from './components/ChatInput/ChatInput';
+import MessageList from './components/MessageList/MessageList';
+import { useChat } from './hooks/useChat';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const {
+    messages,
+    input,
+    isLoading,
+    error,
+    handleInputChange,
+    handleSendMessage,
+    handleKeyDown,
+    handleCopyClick,
+    handleUploadClick,
+    setError // Get setError to potentially clear errors
+  } = useChat();
+
+  // Clear error when user starts typing
+  const handleInputChangeWithErrorClear = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (error) {
+      setError(null);
+    }
+    handleInputChange(e);
+  }
 
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      {/* Display general error if API URL is missing */}
+      {error && messages.length === 0 && (
+        <div className="message assistant error-message" style={{ backgroundColor: '#5a2a2a', margin: '1rem 0' }}>
+          Error: {error}
+        </div>
+      )}
+      <MessageList
+        messages={messages}
+        isLoading={isLoading}
+        error={error} // Pass error to MessageList to display inline if needed
+        onCopy={handleCopyClick}
+      />
+      <ChatInput
+        input={input}
+        onInputChange={handleInputChangeWithErrorClear} // Use the wrapper
+        onSendMessage={handleSendMessage}
+        onKeyDown={handleKeyDown}
+        onUploadClick={handleUploadClick}
+        isLoading={isLoading}
+      />
     </>
-  )
+  );
 }
 
-export default App
+export default App;

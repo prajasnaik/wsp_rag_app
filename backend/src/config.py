@@ -17,7 +17,7 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key'
     
     # ChromaDB settings
-    CHROMA_PERSIST_DIRECTORY = os.environ.get('CHROMA_PERSIST_DIRECTORY') or os.path.join(BASE_DIR, '..', 'data', 'chroma')
+    CHROMA_PERSIST_DIRECTORY = os.environ.get('CHROMA_PERSIST_DIRECTORY') or os.path.join(BASE_DIR, '..', 'pdf_data', 'chroma')
     
     # Google API settings for Gemini
     GOOGLE_API_KEY = os.environ.get('GOOGLE_GENAI_API_KEY')
