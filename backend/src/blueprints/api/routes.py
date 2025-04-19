@@ -1,4 +1,5 @@
 from flask import Blueprint, request, current_app, jsonify, stream_with_context, Response
+import json
 
 from services.document_service import DocumentService, Document
 from services.llm_service import LLMService
@@ -33,7 +34,7 @@ def get_documents():
 
 
 api_bp.route('/documents/<string:doc_id>', methods=['GET'])
-def get_document(doc_id):
+def get_document(doc_id: str):
     """
     Get a specific document by ID.
     """
@@ -68,7 +69,7 @@ def create_document():
     return jsonify(document.to_dict()), 201    
 
 api_bp.route('/documents/<string:doc_id>', methods=['DELETE'])
-def delete_document(doc_id):
+def delete_document(doc_id: str):
     """
     Delete a document by ID.
     """
@@ -86,13 +87,17 @@ def delete_document(doc_id):
 @api_bp.route('/rag/query', methods=['POST'])
 async def generate_llm_response():
     query = request.json.get("query")
+    history = request.json.get("history")
+
+    if not isinstance(history, list):
+        return jsonify({"error" : "history must be a list of messages"})
     if not query:
         return jsonify({"error": "query is required"}), 400
     
     chat_approach: ChatApproach = current_app.config["CHAT_APPROACH"]
     
     def generate():
-        for chunk in chat_approach.run_with_streaming(query):
+        for chunk in chat_approach.run_with_streaming(query, history=history):
             yield chunk
 
     return Response(generate(), content_type='text/event-stream')
@@ -102,7 +107,7 @@ async def generate_llm_response():
 def health_check():
     return {"status": "ok"}, 200
 
-def setup_application():
+def setup_application() -> None:
     initialize_google_client()
     search_service = DocumentService()
     llm_service = LLMService(current_app.config["GOOGLE_CLIENT"], current_app.config["CONFIG"].MODEL, current_app.config["CONFIG"].SYSTEM_PROMPT)
@@ -110,7 +115,7 @@ def setup_application():
     current_app.config["CHAT_APPROACH"] = chat_approach
     current_app.config["DOCUMENT_SERVICE"] = search_service
 
-def initialize_google_client():
+def initialize_google_client() -> None:
     config = Config()
     client = Client(api_key=config.GOOGLE_API_KEY)
     current_app.config["GOOGLE_CLIENT"] = client

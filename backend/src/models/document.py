@@ -1,5 +1,6 @@
 from datetime import datetime
 from uuid import uuid4
+from typing import Any  
 
 class Document:
     """
@@ -23,7 +24,10 @@ class Document:
         }
         
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(
+        cls, 
+        data: dict[str, Any]
+    ):
         """
         Create a Document instance from a dictionary.
         """

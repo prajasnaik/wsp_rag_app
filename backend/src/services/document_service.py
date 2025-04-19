@@ -22,7 +22,10 @@ class DocumentService(BaseService):
         except chromadb.errors.NotFoundError:
             self.collection = self.client.create_collection("documents")
     
-    def add_document(self, document):
+    def add_document(
+            self, 
+            document: Document
+        ) -> Document:
         """
         Add a document to the ChromaDB collection.
         """
@@ -33,7 +36,10 @@ class DocumentService(BaseService):
         )
         return document
     
-    def get_document(self, doc_id):
+    def get_document(
+            self, 
+            doc_id: str
+        ) -> Document:
         """
         Get a document from ChromaDB by ID.
         """
@@ -48,7 +54,11 @@ class DocumentService(BaseService):
         }
         return Document.from_dict(doc_data)
     
-    def search_documents(self, query, limit=5) -> list[Document]:
+    def search_documents(
+            self, 
+            query: str, 
+            limit: int=5
+        ) -> list[Document]:
         """
         Search for documents based on a query string.
         """
@@ -69,7 +79,11 @@ class DocumentService(BaseService):
                 
         return documents
         
-    def list_documents(self, limit=100):
+    def list_documents(
+            self, 
+            limit: int=100
+        ):
+
         """
         List all documents in the collection.
         """
@@ -87,7 +101,10 @@ class DocumentService(BaseService):
                 
         return documents
         
-    def delete_document(self, doc_id):
+    def delete_document(
+            self, 
+            doc_id: str
+        ):
         """
         Delete a document from ChromaDB by ID.
         """

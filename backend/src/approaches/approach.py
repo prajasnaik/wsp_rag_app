@@ -17,14 +17,16 @@ class Approach(ABC):
     def search(
         self, 
         text: str, 
-        top: int
+        top: int,
+        history: dict[str, str] = None
     ) -> List[Document]:
         result = self.search_service.search_documents(text, top if top else 5)
         return result
     
     async def run_with_streaming(
-            self,
-            query_text: str,
+        self,
+        query_text: str,
+        history: list[dict[str, str]]
     ) -> AsyncGenerator[str, None]:
         raise NotImplementedError
     

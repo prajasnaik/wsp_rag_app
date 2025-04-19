@@ -24,7 +24,7 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isLoading, error, o
       {messages.map((msg) => (
         <ChatMessage key={msg.id} message={msg} onCopy={onCopy} />
       ))}
-      {isLoading && messages[messages.length - 1]?.role === 'assistant' && messages[messages.length - 1]?.content === '' && (
+      {isLoading && messages[messages.length - 1]?.role === 'model' && messages[messages.length - 1]?.content === '' && (
         <div className="loading-indicator">Assistant is thinking...</div>
       )}
       {/* Display error inline if it occurs after messages have started */}

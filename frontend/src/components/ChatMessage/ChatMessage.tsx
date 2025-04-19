@@ -8,7 +8,7 @@ interface ChatMessageProps {
 }
 
 const ChatMessage: React.FC<ChatMessageProps> = ({ message, onCopy }) => {
-  const isAssistant = message.role === 'assistant';
+  const isAssistant = message.role === 'model';
 
   return (
     <div className={`message ${message.role}`}>
