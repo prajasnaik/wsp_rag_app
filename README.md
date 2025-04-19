@@ -26,8 +26,8 @@ This RAG application enhances the capabilities of Gemini 2.0 Flash by providing 
 
 1. Clone this repository:
     ```bash
-    git clone https://github.com/yourusername/rag-application.git
-    cd rag-application
+    git clone https://github.com/prajasnaik/wsp_rag_app.git
+     cd wsp_rag_app
     ```
 
 2. Install dependencies:
