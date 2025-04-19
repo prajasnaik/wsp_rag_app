@@ -3,8 +3,7 @@ from flask import Blueprint, send_from_directory, current_app
 # Create the Blueprint for main routes
 main_bp = Blueprint('main', __name__)
 
-@main_bp.route('/', defaults={'path': ''})
-@main_bp.route('/<path:path>')
+@main_bp.route('/')
 def catch_all(path):
     """
     Serve the frontend React SPA.

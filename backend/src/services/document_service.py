@@ -1,7 +1,8 @@
 import os
 import chromadb
-from ..config import Config
-from ..models import Document
+import chromadb.errors
+from config import Config
+from models import Document
 from .base_service import BaseService
 
 class DocumentService(BaseService):
@@ -17,8 +18,8 @@ class DocumentService(BaseService):
         
         # Create collection if it doesn't exist
         try:
-            self.collection = self.client.get_collection("documents")
-        except ValueError:
+            self.collection = self.client.get_or_create_collection("documents")
+        except chromadb.errors.NotFoundError:
             self.collection = self.client.create_collection("documents")
     
     def add_document(self, document):
@@ -47,7 +48,7 @@ class DocumentService(BaseService):
         }
         return Document.from_dict(doc_data)
     
-    def search_documents(self, query, limit=5):
+    def search_documents(self, query, limit=5) -> list[Document]:
         """
         Search for documents based on a query string.
         """

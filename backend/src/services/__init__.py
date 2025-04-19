@@ -1,5 +1,5 @@
 from .base_service import BaseService
 from .document_service import DocumentService
-from .rag_service import RAGService
+from .llm_service import LLMService
 
-__all__ = ['BaseService', 'DocumentService', 'RAGService']
+__all__ = ['BaseService', 'DocumentService', 'LLMService']
