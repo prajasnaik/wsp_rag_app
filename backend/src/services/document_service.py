@@ -4,6 +4,9 @@ import chromadb.errors
 from config import Config
 from models import Document
 from .base_service import BaseService
+from .pdf_parser import PDFParser
+from werkzeug.datastructures import FileStorage
+import uuid
 
 class DocumentService(BaseService):
     """
@@ -15,7 +18,7 @@ class DocumentService(BaseService):
         """
         super().__init__()
         self.client = chromadb.PersistentClient(path=Config.CHROMA_PERSIST_DIRECTORY)
-        
+        self.parser = PDFParser()
         # Create collection if it doesn't exist
         try:
             self.collection = self.client.get_or_create_collection("documents")
@@ -113,3 +116,18 @@ class DocumentService(BaseService):
             return True
         except Exception:
             return False
+        
+    def upload_document(
+        self,
+        file: FileStorage
+    ):
+        extracted_text = self.parser.parse(file)
+        for metadata, extracted_chunks in extracted_text:
+            for chunk_no, chunk in enumerate(extracted_chunks):
+                metadata["page_no"] += 1
+                metadata["chunk_no"] = chunk_no + 1
+                id = str(uuid.uuid4())
+                document = Document(chunk, metadata, id)
+                self.add_document(document)
+        
+        

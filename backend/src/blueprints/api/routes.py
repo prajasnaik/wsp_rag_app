@@ -1,8 +1,9 @@
 from flask import Blueprint, request, current_app, jsonify, stream_with_context, Response
-import json
 
-from services.document_service import DocumentService, Document
+from services.document_service import DocumentService
+from models import Document
 from services.llm_service import LLMService
+from services.search_service import SearchService
 
 from approaches.chatapproach import ChatApproach
 from config import Config
@@ -83,6 +84,30 @@ def delete_document(doc_id: str):
         
     return jsonify({"message": f"Document {doc_id} deleted successfully"}), 200
 
+
+@api_bp.route("/document/upload", methods=["POST"])
+def upload_file(): # Removed async as Flask doesn't need it here for standard requests
+    if "file" not in request.files:
+        return jsonify({"message": "No file part in the request", "status": "failed"}), 400
+
+    file = request.files.get("file") # Use .get() for single file
+    if not file or not file.filename:
+        return jsonify({"message": "No selected file", "status": "failed"}), 400
+
+    if not file.filename.lower().endswith(".pdf"):
+        return jsonify({"message" : "File uploaded must be a PDF"}), 400
+    
+    # Correctly get the service from app config
+    document_service: DocumentService = current_app.config["DOCUMENT_SERVICE"] 
+    try:
+        # Pass the file object to the service method
+        document_service.upload_document(file)
+    except Exception as e:
+        current_app.logger.error(f"Error uploading document: {e}", exc_info=True)
+        return jsonify({"message" : "Some error occurred while parsing or saving the PDF"}), 500
+
+    return jsonify({"message": f"Successfully processed PDF: {file.filename}"}), 200 # Use 200 for success
+
 # RAG routes
 @api_bp.route('/rag/query', methods=['POST'])
 async def generate_llm_response():
@@ -109,11 +134,13 @@ def health_check():
 
 def setup_application() -> None:
     initialize_google_client()
-    search_service = DocumentService()
+    document_service = DocumentService()
+    search_service = SearchService()
     llm_service = LLMService(current_app.config["GOOGLE_CLIENT"], current_app.config["CONFIG"].MODEL, current_app.config["CONFIG"].SYSTEM_PROMPT)
     chat_approach = ChatApproach(search_service, llm_service)
     current_app.config["CHAT_APPROACH"] = chat_approach
-    current_app.config["DOCUMENT_SERVICE"] = search_service
+    current_app.config["DOCUMENT_SERVICE"] = document_service
+    current_app.config["SEARCH_SERVICE"] = search_service
 
 def initialize_google_client() -> None:
     config = Config()
@@ -121,4 +148,3 @@ def initialize_google_client() -> None:
     current_app.config["GOOGLE_CLIENT"] = client
     current_app.config["CONFIG"] = config
 
-    

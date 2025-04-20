@@ -1,6 +1,6 @@
 from models import Document
 from abc import ABC
-from services.document_service import DocumentService
+from services.search_service import SearchService
 from typing import List, AsyncGenerator, Any
 from services.llm_service import LLMService
 
@@ -8,7 +8,7 @@ class Approach(ABC):
 
     def __init__(
         self,
-        search_service: DocumentService,
+        search_service: SearchService,
         llm_service: LLMService,
     ):
         self.search_service = search_service

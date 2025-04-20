@@ -1,5 +1,5 @@
 from .approach import Approach
-from services.document_service import DocumentService
+from services.search_service import SearchService
 from services.llm_service import LLMService
 from typing import Generator, Any
 
@@ -9,7 +9,7 @@ import json
 class ChatApproach(Approach):
     def __init__(
             self, 
-            search_service: DocumentService, 
+            search_service: SearchService, 
             llm_service: LLMService
         ):
         super().__init__(

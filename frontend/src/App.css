@@ -7,19 +7,75 @@
   text-align: left; /* Align text left for chat */
   display: flex;
   flex-direction: column;
-  height: 100vh; /* Full viewport height */
   box-sizing: border-box;
 }
 
-.chat-container {
-  flex-grow: 1; /* Takes up available space */
-  overflow-y: auto; /* Allows scrolling for messages */
+.app-container {
+  max-width: 800px; /* Adjust max width */
+  width: 100%;
+  margin: 0 auto;
+  padding: 1rem;
+  text-align: left; /* Align text left for chat */
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* Full viewport height */
+  box-sizing: border-box;
+  justify-content: flex-end; /* Push content to bottom initially */
+  transition: justify-content 0.5s ease-in-out; /* Smooth transition */
+}
+
+.app-container.chat-active {
+  justify-content: space-between; /* Normal layout when chat is active */
+}
+
+/* Initial State View */
+.initial-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  flex-grow: 1; /* Take up space */
+  padding-bottom: 2rem; /* Space above input */
+  color: #aaa;
+}
+
+.ai-icon {
+  font-size: 4em; /* Make icon larger */
   margin-bottom: 1rem;
+  color: #646cff; /* Use accent color */
+}
+
+.initial-view h1 {
+  font-size: 1.5em;
+  font-weight: 400;
+}
+
+/* Message List Wrapper for Transition */
+.message-list-wrapper {
+  flex-grow: 1; /* Takes up available space in chat-active state */
+  overflow: hidden; /* Hide overflow during transition */
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.5s ease-in-out, opacity 0.3s ease-in-out 0.2s; /* Delay opacity */
+  display: flex; /* Needed for flex-grow to work inside */
+  flex-direction: column;
+}
+
+.message-list-wrapper.visible {
+  max-height: 80vh; /* Adjust as needed, should be large enough */
+  opacity: 1;
+}
+
+.chat-container {
+  overflow-y: auto; /* Allows scrolling for messages */
   padding-right: 10px; /* Space for scrollbar */
   border: 1px solid #444; /* Subtle border */
   border-radius: 8px;
   padding: 1rem;
   background-color: #242424; /* Slightly lighter chat area */
+  height: 100%; /* Fill the wrapper */
+  margin-bottom: 0;
 }
 
 /* Messages Styling */
@@ -32,10 +88,11 @@
 }
 
 .message.user {
+  width: fit-content; /* Or max-content */
+  max-width: 80%; /* Keep max width */
+  margin-left: auto; /* Push user messages to the right */
   background-color: #3a3a3a; /* User message background */
   text-align: right;
-  margin-left: auto; /* Push user messages to the right */
-  max-width: 80%;
 }
 
 .message.assistant {
@@ -76,6 +133,47 @@
   color: #646cff;
 }
 
+/* Style for copied state */
+.copy-button.copied {
+  color: #4caf50; /* Green color for success */
+  cursor: default;
+}
+
+/* Markdown specific styles (add more as needed) */
+.message-content > *:first-child {
+  margin-top: 0; /* Remove top margin from the very first element */
+}
+
+.message-content > *:last-child {
+  margin-bottom: 0; /* Remove bottom margin from the very last element */
+}
+
+.message-content p {
+  margin-top: 0.1em; /* Further reduce paragraph top margin */
+  margin-bottom: 0.1em; /* Further reduce paragraph bottom margin */
+  line-height: 1.5; /* Adjust line-height if needed */
+}
+
+.message-content strong {
+  font-weight: bold;
+}
+
+.message-content ul,
+.message-content ol {
+  padding-left: 20px; /* Indent lists */
+  margin-top: 0.1em; /* Further reduce list top margin */
+  margin-bottom: 0.1em; /* Further reduce list bottom margin */
+}
+
+.message-content li {
+  margin-bottom: 0; /* Remove list item bottom margin */
+}
+
+.message-content li > p {
+  margin-block-start: 0; /* Remove margin for paragraphs inside list items */
+  margin-block-end: 0;
+}
+
 /* Error Message Styling */
 .error-message {
   background-color: #5a2a2a !important; /* Ensure error background overrides others */
@@ -97,6 +195,9 @@
   align-items: center;
   padding: 0.5rem;
   border-top: 1px solid #444; /* Separator line */
+  width: 100%; /* Ensure input takes full width */
+  box-sizing: border-box; /* Include padding in width */
+  margin-top: auto; /* Push to bottom in initial state */
 }
 
 .input-area textarea {
@@ -146,6 +247,10 @@
   height: 1.2em;
 }
 
+.app-container.chat-active .input-area {
+  margin-top: 0; /* Reset margin when chat is active */
+}
+
 /* Loading Indicator */
 .loading-indicator {
   text-align: center;
@@ -159,4 +264,35 @@
 .card,
 .read-the-docs {
   display: none;
+}
+
+/* Upload Button Spinner */
+.upload-button.uploading svg.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Success Message Styling */
+.success-message {
+  background-color: #2a5a2a !important; /* Dark green */
+  color: #d4edda; /* Lighter text */
+  border: 1px solid #c3e6cb; /* Subtle border */
+}
+
+/* Inline Status Messages (above input when chat active) */
+.status-message-inline {
+  margin: 0.5rem 0;
+  padding: 0.5rem 0.8rem;
+  border-radius: 8px;
+  max-width: calc(100% - 1rem); /* Adjust width relative to container padding */
+  box-sizing: border-box;
+  font-size: 0.9em;
 }

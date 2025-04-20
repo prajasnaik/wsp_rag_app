@@ -1,7 +1,7 @@
 from .base_service import BaseService
 from google.genai import Client
 from google.genai import types
-from .document_service import Document
+from models.document import Document
 from typing import Generator
 
 class LLMService(BaseService):
