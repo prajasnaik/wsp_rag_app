@@ -11,7 +11,7 @@ This RAG application enhances the capabilities of Gemini 2.0 Flash by providing 
 - **Gemini 2.0 Flash Integration**: Utilizes Google's powerful LLM for generating responses
 - **ChromaDB Vector Database**: Stores and retrieves document embeddings efficiently
 - **RAG Architecture**: Enhances LLM responses with relevant retrieved context
-- **Azure Deployment**: Configured for seamless deployment to Azure services
+- **Google OAuth**: A fully functioning implementation of Google OAuth for security with refresh token system. 
 - **Simple UI**: Basic interface for user interaction
 
 ## Getting Started
@@ -21,6 +21,9 @@ This RAG application enhances the capabilities of Gemini 2.0 Flash by providing 
 - Python 3.8+
 - Google API key for Gemini access
 - Azure account for deployment
+- React-vite setup
+- npm
+- node
 
 ### Installation
 
@@ -42,28 +45,21 @@ This RAG application enhances the capabilities of Gemini 2.0 Flash by providing 
 
 ### Usage
 
-1. Add your documents to the `data` directory
-2. Run the indexing script to populate ChromaDB:
-    ```bash
-    python scripts/index_documents.py
-    ```
+1. Build the UI:
+```
+npm run build
+```
 
-3. Start the application:
+1. Start the application:
     ```bash
     python app.py
     ```
 
-4. Access the UI through your browser at `http://localhost:5000`
+2. Access the UI through your browser at `http://localhost:5000`
 
 ## Deployment to Azure
 
-This application is configured to be deployed on Azure services:
-
-1. Set up Azure resources (App Service, etc.)
-2. Configure deployment settings in Azure
-3. Deploy the application from your repository
-
-Detailed deployment instructions are available in [DEPLOYMENT.md](DEPLOYMENT.md).
+This application will add support for Azure Deployments in the future.
 
 ## Future Enhancements
 
@@ -80,4 +76,3 @@ Detailed deployment instructions are available in [DEPLOYMENT.md](DEPLOYMENT.md)
 
 - Google for Gemini 2.0 Flash
 - ChromaDB team for the vector database
-- Microsoft Azure for hosting capabilities

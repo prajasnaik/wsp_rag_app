@@ -1,148 +1,125 @@
 from flask import Blueprint, request, current_app, jsonify
-from google_auth_oauthlib.flow import Flow
-from google.oauth2 import id_token
-from google.auth.transport import requests as google_requests
 from config import Config
 from services.auth_service import AuthService
-import os
-from datetime import datetime, timedelta
-from sqlalchemy import select
 
 auth_bp = Blueprint("auth", __name__)
 
 @auth_bp.route("/auth/google/callback", methods=["POST"])
 def auth_callback():
+    """Handle Google OAuth callback and create user session"""
+    # Extract data from request
     authorization_code = request.json.get("code", "")
-    redirect_url = request.json.get("redirect_uri", "")
-    if not authorization_code or not redirect_url:
-        return jsonify({"error" : "Authorization code or Redirect URI not found"}, 400)
-
-    client_secrets_path = os.path.join(
-        os.path.dirname(
-            os.path.dirname(
-                os.path.dirname(
-                    os.path.dirname(os.path.abspath(__file__))))),
-        "client_secret.json"
-    )
-    flow = Flow.from_client_secrets_file(
-        client_secrets_path,
-        scopes=['https://www.googleapis.com/auth/userinfo.profile', 'https://www.googleapis.com/auth/userinfo.email' ,'openid'],
-        redirect_uri=redirect_url
-    )
-
-    try:
-        flow.fetch_token(code=authorization_code)
-        credentials = flow.credentials
-    except Exception as e:
-        print(f"Error fetching token: {e}")
-        return jsonify({"error": "Failed to fetch token. Please check the redirect URI and authorization code."}), 400
+    redirect_uri = request.json.get("redirect_uri", "")
     
-    user_id = credentials.id_token
+    # Validate request data
+    if not authorization_code or not redirect_uri:
+        return jsonify({"error": "Authorization code or Redirect URI not found"}), 400
 
-    config: Config = current_app.config.get("CONFIG")
-
-    idinfo = id_token.verify_oauth2_token(user_id, google_requests.Request(), config.GOOGLE_OAUTH_CLIENT_ID)
-
-    user_id = idinfo.get("sub", "")
-    if not user_id:
-        return jsonify({"error" : "Invalid authorization code"}), 401
-
-    LocalSession = current_app.config.get("SESSION_LOCAL", "")
+    # Get database session
+    LocalSession = current_app.config.get("SESSION_LOCAL")
     if not LocalSession:
-        return jsonify({"error" : "Some error occurred"}), 500
+        return jsonify({"error": "Database session not initialized"}), 500
     
+    # Get config
+    config: Config = current_app.config.get("CONFIG")
+    
+    # Create auth service
     auth_service = AuthService(LocalSession())
+    
     try:
-        access_token, refresh_token = auth_service.store_token(user_id)
-        if not access_token or not refresh_token:
-            return jsonify({"error", "Some error occurred"}), 500
-        
-        response = jsonify(
-            {
-            "access_token": access_token,
-            "expires_in": 60 * 5
-            },
+        # Authenticate with Google
+        user_id, success, error_message = auth_service.authenticate_with_google(
+            authorization_code, 
+            redirect_uri,
+            config.GOOGLE_OAUTH_CLIENT_ID
         )
-        response.set_cookie("access_token", access_token, httponly=True, max_age=60 * 5)
-        response.set_cookie("refresh_token", refresh_token, httponly=True, max_age=60 * 60 * 24 * 7)
+        
+        if not success:
+            return jsonify({"error": error_message}), 401
+        
+        # Create tokens
+        access_token, refresh_token, expires_at = auth_service.create_auth_tokens(user_id)
+        
+        # Create response
+        response = jsonify({
+            "access_token": access_token,
+            "expires_in": 300  # 5 minutes in seconds
+        })
+        
+        # Set cookies
+        response.set_cookie("access_token", access_token, httponly=True, max_age=300)  # 5 minutes
+        response.set_cookie("refresh_token", refresh_token, httponly=True, max_age=604800)  # 7 days
+        
         return response, 200
-
+        
     except Exception as e:
-        print(e)
-        return jsonify({"error" : "Some error occurred"}), 500
+        print(f"Error in auth callback: {e}")
+        return jsonify({"error": "Authentication failed"}), 500
 
 @auth_bp.route("/auth/refresh", methods=["POST"])
 def refresh_token():
-    """Refresh an access token using the refresh token in the cookies"""
+    """Refresh an access token using the refresh token in cookies"""
+    # Get refresh token from cookies
     refresh_token = request.cookies.get("refresh_token", "")
     if not refresh_token:
         return jsonify({"error": "Refresh token not found"}), 401
 
-    LocalSession = current_app.config.get("SESSION_LOCAL", "")
+    # Get database session
+    LocalSession = current_app.config.get("SESSION_LOCAL")
     if not LocalSession:
         return jsonify({"error": "Database session not initialized"}), 500
     
-    db_session = LocalSession()
+    # Create auth service
+    auth_service = AuthService(LocalSession())
     
-    from models.user_session import UserSession
+    # Refresh the token
+    access_token, expires_at, success, error_message = auth_service.refresh_auth_token(refresh_token)
     
-    # Find the user session with the provided refresh token
-    stmt = select(UserSession).where(
-        UserSession.refresh_token == refresh_token,
-        UserSession.revoked == False,
-        UserSession.expires_at > datetime.now()
-    )
+    if not success:
+        return jsonify({"error": error_message}), 401
     
-    result = db_session.execute(stmt).first()
-    if not result:
-        return jsonify({"error": "Invalid or expired refresh token"}), 401
-    
-    user_session = result[0]
-    
-    # Create a new access token
-    auth_service = AuthService(db_session)
-    expires_at = datetime.now() + timedelta(minutes=30)
-    access_token = auth_service.create_user_jwt(user_session.name, expires_at)
-    
-    # Update the expiry time of the session
-    user_session.expires_at = expires_at
-    db_session.commit()
-    
+    # Create response
     response = jsonify({
         "access_token": access_token,
-        "expires_in": 60 * 5
+        "expires_in": 300  # 5 minutes in seconds
     })
     
-    # Set the new access token as a cookie
-    response.set_cookie("access_token", access_token, httponly=True, max_age=60 * 5)
+    # Set new access token cookie
+    response.set_cookie("access_token", access_token, httponly=True, max_age=300)  # 5 minutes
     
     return response, 200
 
 @auth_bp.route("/auth/status", methods=["GET"])
 def auth_status():
     """Check the authentication status of the user"""
+    # Get access token from cookies
     access_token = request.cookies.get("access_token", "")
+    
     if not access_token:
         return jsonify({
             "is_authenticated": False,
             "access_token": None
         }), 200
     
-    LocalSession = current_app.config.get("SESSION_LOCAL", "")
+    # Get database session
+    LocalSession = current_app.config.get("SESSION_LOCAL")
     if not LocalSession:
         return jsonify({"error": "Database session not initialized"}), 500
     
+    # Create auth service
     auth_service = AuthService(LocalSession())
-    user_id = auth_service.validate_user_jwt(access_token)
     
-    if user_id:
+    # Validate the token
+    user_id, is_valid = auth_service.validate_access_token(access_token)
+    
+    if is_valid:
         return jsonify({
             "is_authenticated": True,
             "access_token": access_token,
             "user_id": user_id
         }), 200
     
-    # Try to refresh the token
+    # If access token is invalid, try to auto-refresh using refresh token
     refresh_token = request.cookies.get("refresh_token", "")
     if not refresh_token:
         return jsonify({
@@ -150,8 +127,19 @@ def auth_status():
             "access_token": None
         }), 200
     
-    # Attempt token refresh logic
-    # For now, we'll just return not authenticated
+    # Try to refresh the token
+    access_token, expires_at, success, _ = auth_service.refresh_auth_token(refresh_token)
+    
+    if success:
+        response = jsonify({
+            "is_authenticated": True,
+            "access_token": access_token,
+            "user_id": user_id
+        })
+        response.set_cookie("access_token", access_token, httponly=True, max_age=300)  # 5 minutes
+        return response, 200
+    
+    # If refresh fails, user is not authenticated
     return jsonify({
         "is_authenticated": False,
         "access_token": None
@@ -160,22 +148,18 @@ def auth_status():
 @auth_bp.route("/auth/logout", methods=["POST"])
 def logout():
     """Log out the user by invalidating their refresh token"""
+    # Get refresh token from cookies
     refresh_token = request.cookies.get("refresh_token", "")
     
     if refresh_token:
-        LocalSession = current_app.config.get("SESSION_LOCAL", "")
+        # Get database session
+        LocalSession = current_app.config.get("SESSION_LOCAL")
         if LocalSession:
-            db_session = LocalSession()
-            from models.user_session import UserSession
+            # Create auth service
+            auth_service = AuthService(LocalSession())
             
-            # Find and revoke the session
-            stmt = select(UserSession).where(UserSession.refresh_token == refresh_token)
-            result = db_session.execute(stmt).first()
-            
-            if result:
-                user_session = result[0]
-                user_session.revoked = True
-                db_session.commit()
+            # Revoke the session
+            auth_service.logout(refresh_token)
     
     # Clear cookies regardless of whether the token was found
     response = jsonify({"message": "Logged out successfully"})
