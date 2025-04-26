@@ -1,12 +1,14 @@
 import { useState, useCallback } from 'react';
 import { Message } from '../types'; // Import Message type
+import { useAuth } from './AuthContext';
 
 // --- Constants ---
 const API_BASE_URL = import.meta.env.VITE_API_URL || ''; // Get API URL from .env
-const CHAT_API_ENDPOINT = `${API_BASE_URL}/rag/query`; // Specific endpoint
+    const CHAT_API_ENDPOINT = `${API_BASE_URL}/rag/query`; // Specific endpoint
 const UPLOAD_API_ENDPOINT = `${API_BASE_URL}/document/upload`; // Upload endpoint
 
 export const useChat = () => {
+    const {refresh } = useAuth();
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -50,7 +52,7 @@ export const useChat = () => {
             const history = messages.map(({ role, content }) => ({ role, text: content }));
             setMessages((prevMessages) => [...prevMessages, newUserMessage])
             console.log("Sending request")
-            const response = await fetch(CHAT_API_ENDPOINT, {
+            let response = await fetch(CHAT_API_ENDPOINT, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -60,6 +62,21 @@ export const useChat = () => {
                     history: history, // Include the history in the request
                 }),
             });
+
+            if (response.status === 401 || response.status === 403) {
+                // Try to refresh the token and retry
+                await refresh();
+                response = await fetch(CHAT_API_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: trimmedInput,
+                        history: history,
+                    }),
+                });
+            }
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response' }));
@@ -145,7 +162,7 @@ export const useChat = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [input, isLoading, isUploading, messages]); // Dependencies for useCallback
+    }, [input, isLoading, isUploading, messages, refresh]); // Add refresh to dependencies
 
     const handleKeyDown = useCallback((event: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (event.key === 'Enter' && !event.shiftKey && !isUploading) { // Prevent send while uploading

@@ -10,6 +10,37 @@
   box-sizing: border-box;
 }
 
+/* Loading container for auth loading state */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100%;
+}
+
+.ai-icon.spinner {
+  animation: spin 2s infinite linear;
+  font-size: 4em;
+  color: #646cff;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-container p {
+  margin-top: 1rem;
+  color: #aaa;
+  font-size: 1.2rem;
+}
+
 .app-container {
   max-width: 800px; /* Adjust max width */
   width: 100%;
@@ -269,15 +300,6 @@
 /* Upload Button Spinner */
 .upload-button.uploading svg.spinner {
   animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 /* Success Message Styling */

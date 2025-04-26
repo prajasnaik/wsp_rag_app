@@ -16,6 +16,8 @@ class Config:
     # Secret key for session management
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key'
     
+    GOOGLE_OAUTH_CLIENT_ID = os.environ.get("GOOGLE_OAUTH_CLIENT_ID", "")
+
     # ChromaDB settings
     CHROMA_PERSIST_DIRECTORY = os.environ.get('CHROMA_PERSIST_DIRECTORY') or os.path.join(BASE_DIR, '..', 'pdf_data', 'chroma')
     

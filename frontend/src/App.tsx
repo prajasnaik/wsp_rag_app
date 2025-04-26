@@ -2,7 +2,9 @@ import './App.css';
 import ChatInput from './components/ChatInput/ChatInput';
 import MessageList from './components/MessageList/MessageList';
 import { useChat } from './hooks/useChat';
-import { TbHexagonLetterA } from "react-icons/tb";
+import { TbHexagonLetterP} from "react-icons/tb";
+import { AuthProvider, useAuth } from './hooks/AuthContext'
+import Login from './components/Login/Login';
 
 function App() {
   const {
@@ -22,6 +24,11 @@ function App() {
     setUploadError,
     setUploadSuccessMessage
   } = useChat();
+  const {
+    isAuthenticated,
+    isLoading: authLoading,
+    logout
+  } = useAuth();
 
   const hasStartedChat = messages.length > 0;
 
@@ -33,11 +40,29 @@ function App() {
     handleInputChange(e);
   }
 
+  // Show loading indicator while checking auth status
+  if (authLoading) {
+    return (
+      <div className="loading-container">
+        <TbHexagonLetterP className="ai-icon spinner" />
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  // Show login screen if not authenticated
+  if (!isAuthenticated) {
+    return <Login />;
+  }
+
   return (
     <div className={`app-container ${hasStartedChat ? 'chat-active' : 'initial-state'}`}>
+      {/* Add logout button in the top right */}
+      <button style={{position:'absolute',top:20,right:20}} onClick={logout}>Logout</button>
+
       {!hasStartedChat && (
         <div className="initial-view">
-          <TbHexagonLetterA className="ai-icon" />
+          <TbHexagonLetterP className="ai-icon" />
           <h1>What can I help with?</h1>
           {/* Display config error in initial state */}
           {error && error.includes("API URL is not configured") && (
@@ -93,4 +118,10 @@ function App() {
   );
 }
 
-export default App;
+export default function AppWithProvider() {
+  return (
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  );
+}
