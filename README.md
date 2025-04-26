@@ -4,7 +4,7 @@ This repository contains a Retrieval-Augmented Generation (RAG) application that
 
 ## Overview
 
-This RAG application enhances the capabilities of Gemini 2.0 Flash by providing it with relevant context from a knowledge base stored in ChromaDB. This approach enables more accurate and contextually appropriate responses.
+This RAG application enhances the capabilities of Gemini 2.0 Flash by providing it with relevant context from a knowledge base stored in ChromaDB. This approach enables more accurate and contextually appropriate responses. This is also a single page application and hence will be served directly via the API. It must be built before running though.
 
 ## Features
 

@@ -2,7 +2,6 @@
 .env
 **/__pycache__
 pdf_data/
-data/
 client_secret.json
 private_key.pem
 public_key.pem
