@@ -76,7 +76,10 @@ def refresh_token():
     access_token, refresh_token, expires_at, success, error_message = auth_service.refresh_auth_token(refresh_token)
     
     if not success:
-        return jsonify({"error": error_message}), 401
+        response = jsonify({"error": error_message})
+        response.delete_cookie("access_token")
+        response.delete_cookie("refresh_token")
+        return response, 401
     
     # Create response
     response = jsonify({
