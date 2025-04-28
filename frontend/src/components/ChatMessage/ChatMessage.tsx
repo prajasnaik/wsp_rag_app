@@ -20,6 +20,16 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onCopy }) => {
 
   return (
     <div className={`message ${message.role}`}>
+      {isAssistant && message.content && (
+        <button
+          className={`copy-button ${isCopied ? 'copied' : ''} copy-button-left`}
+          onClick={handleCopy}
+          title={isCopied ? "Copied!" : "Copy response"}
+          disabled={isCopied} // Disable briefly after copying
+        >
+          {isCopied ? <FiCheck /> : <FiCopy />} {/* Show checkmark when copied */}
+        </button>
+      )}
       <div className="message-content">
         {/* Render markdown for assistant, plain text for user */}
         {isAssistant ? (
@@ -28,16 +38,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, onCopy }) => {
           message.content
         )}
       </div>
-      {isAssistant && message.content && (
-        <button
-          className={`copy-button ${isCopied ? 'copied' : ''}`}
-          onClick={handleCopy}
-          title={isCopied ? "Copied!" : "Copy response"}
-          disabled={isCopied} // Disable briefly after copying
-        >
-          {isCopied ? <FiCheck /> : <FiCopy />} {/* Show checkmark when copied */}
-        </button>
-      )}
     </div>
   );
 };
