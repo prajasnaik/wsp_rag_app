@@ -57,6 +57,12 @@ class LLMService(BaseService):
             )
 
         if documents:
+            contents.append(
+                types.Content(
+                    role="user",
+                    parts = [types.Part.from_text(text="\nRetrieved documents started")]
+                )
+            )
             for document in documents:
                 contents.append(
                     types.Content(
@@ -64,7 +70,15 @@ class LLMService(BaseService):
                         parts=[types.Part.from_text(text=document.text)]
                     )
                 )
+            contents.append(
+                types.Content(
+                    role="user",
+                    parts = [types.Part.from_text(text="\nRetrieved documents terminated")]
+                )
+            )
         
+    
+
         if history:
             for message in history:
                 contents.append(
