@@ -91,7 +91,7 @@ class AuthService(BaseService):
         
         return access_token, refresh_token, expires_at
     
-    def refresh_auth_token(self, refresh_token: str) -> tuple[str, datetime, bool, str]:
+    def refresh_auth_token(self, refresh_token: str) -> tuple[str, str, datetime, bool, str]:
         """
         Refresh an access token using a refresh token.
         
@@ -106,16 +106,11 @@ class AuthService(BaseService):
         if not session:
             return "", datetime.now(), False, "Invalid or expired refresh token"
         
-        # Create new expiry time
-        expires_at = datetime.now() + timedelta(minutes=30)
+        new_access_token, new_refresh_token, expires_at = self.create_auth_tokens(session.name)
+
+        self.user_session_service.revoke_session(refresh_token)
         
-        # Generate new access token
-        access_token = self.jwt_service.create_access_token(session.name, expires_at)
-        
-        # Update the session expiry
-        self.user_session_service.update_session_expiry(refresh_token, expires_at)
-        
-        return access_token, expires_at, True, ""
+        return new_access_token, new_refresh_token, expires_at, True, ""
     
     def validate_access_token(self, access_token: str) -> tuple[str, bool]:
         """

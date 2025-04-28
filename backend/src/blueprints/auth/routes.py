@@ -73,7 +73,7 @@ def refresh_token():
     auth_service = AuthService(LocalSession())
     
     # Refresh the token
-    access_token, expires_at, success, error_message = auth_service.refresh_auth_token(refresh_token)
+    access_token, refresh_token, expires_at, success, error_message = auth_service.refresh_auth_token(refresh_token)
     
     if not success:
         return jsonify({"error": error_message}), 401
@@ -86,7 +86,7 @@ def refresh_token():
     
     # Set new access token cookie
     response.set_cookie("access_token", access_token, httponly=True, max_age=300)  # 5 minutes
-    
+    response.set_cookie("refresh_token", refresh_token, httponly=True, max_age=604800)
     return response, 200
 
 @auth_bp.route("/auth/status", methods=["GET"])

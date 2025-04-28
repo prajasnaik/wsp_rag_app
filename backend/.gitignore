@@ -5,3 +5,4 @@ pdf_data/
 client_secret.json
 private_key.pem
 public_key.pem
+data/

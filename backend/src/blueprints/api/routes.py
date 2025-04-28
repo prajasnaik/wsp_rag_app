@@ -1,5 +1,5 @@
 from flask import Blueprint, request, current_app, jsonify, stream_with_context, Response
-
+from decorators.decorators import validate_auth_token
 from services.document_service import DocumentService
 from models import Document
 from services.llm_service import LLMService
@@ -86,6 +86,7 @@ def delete_document(doc_id: str):
 
 
 @api_bp.route("/document/upload", methods=["POST"])
+@validate_auth_token
 def upload_file(): # Removed async as Flask doesn't need it here for standard requests
     if "file" not in request.files:
         return jsonify({"message": "No file part in the request", "status": "failed"}), 400
@@ -108,8 +109,9 @@ def upload_file(): # Removed async as Flask doesn't need it here for standard re
 
     return jsonify({"message": f"Successfully processed PDF: {file.filename}"}), 200 # Use 200 for success
 
-# RAG routes
+
 @api_bp.route('/rag/query', methods=['POST'])
+@validate_auth_token
 async def generate_llm_response():
     query = request.json.get("query")
     history = request.json.get("history")

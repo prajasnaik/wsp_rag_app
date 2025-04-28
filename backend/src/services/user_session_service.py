@@ -113,7 +113,12 @@ class UserSessionService(BaseService):
             
         return count
     
-    def update_session_expiry(self, refresh_token: str, new_expires_at: datetime) -> bool:
+    def update_session(
+            self, 
+            refresh_token: str, 
+            new_access_token: str, 
+            new_expires_at: datetime
+        ) -> bool:
         """
         Update the expiry time of a session.
         
@@ -128,6 +133,6 @@ class UserSessionService(BaseService):
         if not session:
             return False
             
-        session.expires_at = new_expires_at
+        session.revoked = True
         self.db_session.commit()
         return True
