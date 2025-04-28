@@ -35,13 +35,15 @@ This RAG application enhances the capabilities of Gemini 2.0 Flash by providing 
 
 2. Install dependencies:
     ```bash
+    cd backend
     pip install -r requirements.txt
     ```
 
-3. Set up environment variables:
-    ```bash
-    export GOOGLE_API_KEY="your_gemini_api_key"
-    ```
+3. Install UI dependencies
+```bash
+    cd frontend
+    npm install
+```
 
 ### Usage
 
